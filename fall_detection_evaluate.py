@@ -13,7 +13,7 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 import pickle
 
-test_video_number = 2
+test_video_number = 14
 
 gmm_model = pickle.load(open('gmm_model.pickle', 'rb'))
 path = 'files/video-{}_processed.txt'.format(test_video_number)
@@ -28,17 +28,22 @@ print('log_likelihood min: %.3f \nlog_likelihood.max: %.3f \nlog_likelihood mean
 
 thresholds = np.arange(-10,0,0.01)
 max_roc_score=0
+max_acc_score=0
+max_mcc_score=0
 max_f1=0
 best_threshold=0
 EER=[]
 
 for threshold in thresholds:
     y_predicted = [x < threshold for x in log_likelihood]
-    roc_score = roc_auc_score(y_test,y_predicted)
-    EER.append(1-roc_score)
+    #roc_score = roc_auc_score(y_test,y_predicted)
+    acc_score = accuracy_score(y_true=y_test, y_pred=y_predicted)
+    mcc_score = matthews_corrcoef(y_true=y_test, y_pred=y_predicted)
+    EER.append(1-acc_score)
     #f1 = f1_score(y_true=y_test, y_pred=y_predicted)
-    if  roc_score > max_roc_score :
-        max_roc_score = roc_score
+    if  mcc_score > max_mcc_score :
+        max_mcc_score = mcc_score
+        #max_roc_score = roc_score
         best_threshold = threshold
         #max_f1 = f1
 
