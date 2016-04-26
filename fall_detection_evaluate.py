@@ -13,9 +13,11 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 import pickle
 
-test_video_number = 14
+test_video_number = 13
+model_number = 14
+best_threshold = -3.850000000000131
 
-gmm_model = pickle.load(open('gmm_model.pickle', 'rb'))
+gmm_model = pickle.load(open('gmm_model{}.pickle'.format(model_number), 'rb'))
 path = 'files/video-{}_processed.txt'.format(test_video_number)
 data  = np.genfromtxt(path,delimiter=' ')
 X_test = data[:,[0,1]]
@@ -26,33 +28,8 @@ print('SUMMARY EVALUATION:')
 print('log_likelihood min: %.3f \nlog_likelihood.max: %.3f \nlog_likelihood mean: %.3f'
     % (log_likelihood.min(), log_likelihood.max(),log_likelihood.mean()))
 
-thresholds = np.arange(-10,0,0.01)
-max_roc_score=0
-max_acc_score=0
-max_mcc_score=0
-max_f1=0
-best_threshold=0
-EER=[]
 
-for threshold in thresholds:
-    y_predicted = [x < threshold for x in log_likelihood]
-    #roc_score = roc_auc_score(y_test,y_predicted)
-    acc_score = accuracy_score(y_true=y_test, y_pred=y_predicted)
-    mcc_score = matthews_corrcoef(y_true=y_test, y_pred=y_predicted)
-    EER.append(1-acc_score)
-    #f1 = f1_score(y_true=y_test, y_pred=y_predicted)
-    if  mcc_score > max_mcc_score :
-        max_mcc_score = mcc_score
-        #max_roc_score = roc_score
-        best_threshold = threshold
-        #max_f1 = f1
 
-print('Best Thresold:',best_threshold)
-plt.ylabel('Error Rate')
-plt.xlabel('Log-likelihood Threshold')
-plt.plot(thresholds,EER)
-plt.show
-plt.savefig('log-likelihood-Threshold-EER-graph')
 
 y_predicted = [x < best_threshold for x in log_likelihood]
 roc_score = roc_auc_score(y_test,y_predicted)
