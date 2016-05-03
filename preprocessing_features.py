@@ -3,18 +3,18 @@ import pandas as pd
 import warnings
 from pandas import DataFrame, Series
 
-video_number = 9
-fall_starting_in_sec = 11
-fall_ending_in_sec = 12
+video_number = 30
+fall_starting_in_sec = 8
+fall_ending_in_sec = 10
 frame_per_sec = 2
-seconds_after_fall=10
+seconds_after_fall=5
 
 floats=[]
 training_points=np.array(floats)
 X_train=[]
 y_train=[]
 
-input_folder = 'files/'
+input_folder = 'raw-cost-files/'
 video_file = input_folder + 'video-{}'.format(video_number)
 path_txt = video_file +'.txt'
 data  = np.genfromtxt(path_txt,delimiter=' ')
@@ -29,14 +29,8 @@ for x in range(len(data)):
 
 with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        for i in range(len(data)):
-            if(i==len(data)-1):
-                feature_vector_2[i]=data[i]
-                break
-            try:
-                after_fall_frames = data[i+1:i+1+frame_per_sec*seconds_after_fall]
-            except IndexError:
-                after_fall_frames = data[i+1:]
+        for i in range(len(data)-6):
+            after_fall_frames = data[i+6:i+6+frame_per_sec*seconds_after_fall]
             feature_vector_2[i]=np.mean(after_fall_frames)
 
 df = DataFrame({'f1' : feature_vector_1,'f2' : feature_vector_2, 'y': y_train})
