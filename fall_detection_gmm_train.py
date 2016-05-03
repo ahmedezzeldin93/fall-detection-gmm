@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import mixture
@@ -11,6 +12,7 @@ from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import matthews_corrcoef
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
+from sklearn.metrics import mean_squared_error
 import pickle
 
 #Parameters
@@ -20,8 +22,13 @@ frame_per_sec = 2
 
 stdsc = StandardScaler()
 gmm = mixture.GMM(n_components=3)
-scores = dict()
+best_thresholds = []
+acc_scores = []
+roc_scores = []
+mcc_scores = []
+mses = []
 X_train = np.empty([1, 2])
+gmm_models_numbers = number_of_training_videos+1
 
 print('Training GMM ..')
 for kfold in range(starting_video_number,starting_video_number+number_of_training_videos):
@@ -42,7 +49,6 @@ for kfold in range(starting_video_number,starting_video_number+number_of_trainin
     log_likelihood = -gmm.score(X_test)
 
     thresholds = np.arange(-10,0,0.01)
-    best_thresholds = []
     max_mcc_score=0
     best_threshold=0
     for threshold in thresholds:
@@ -63,17 +69,36 @@ for kfold in range(starting_video_number,starting_video_number+number_of_trainin
         if  mcc > max_mcc_score :
             max_mcc_score = mcc
             best_threshold = threshold
-    best_thresholds.append(best_thresholds)
+    best_thresholds.append(best_threshold)
     print('Best Thresold for GMM{}: {}'.format(kfold, best_threshold))
 
     y_predicted = [x < best_threshold for x in log_likelihood]
     roc_score = roc_auc_score(y_test,y_predicted)
+    mcc_score = matthews_corrcoef(y_true=y_test, y_pred=y_predicted)
     acc_score = accuracy_score(y_true=y_test, y_pred=y_predicted)
-    scores[kfold] = acc_score
-    print('Fold %s: ROC score: %.3f, Accuracy: %.3f' % (kfold,roc_score,acc_score))
+    #acc_scores.append(acc_score)
+    #roc_scores.append(roc_score)
+    mcc_scores.append(mcc_score)
+    mse = mean_squared_error(y_test, y_predicted)
+    mses.append(mse)
+    print('Fold %s: ROC score: %.3f, Accuracy: %.3f, MCC: %.3f' % (kfold,roc_score,acc_score,mcc_score))
     print()
     pickle.dump(gmm, open('gmm_model{}.pickle'.format(kfold), 'wb'))
 
 
-print(scores)
-print('GMMs saved.')
+
+m = max(mcc_scores)
+m_index = [i for i, j in enumerate(mcc_scores) if j == m]
+gmm_threshold = best_thresholds[m_index[0]]
+
+with open('gmm-pram.txt', 'a') as the_file:
+    the_file.write(str(m_index[0]))
+    the_file.write('\n')
+    the_file.write(str(gmm_threshold))
+
+for i in range(1,gmm_models_numbers):
+    if i != m_index[0]:
+        os.remove('gmm_model{}.pickle'.format(i))
+print('LOOCV mean MSE: {}'.format(np.mean(mses)))
+print('GMM selected: GMM {}'.format(m_index[0]))
+print('GMM saved.')
