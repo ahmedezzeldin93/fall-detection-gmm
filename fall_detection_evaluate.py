@@ -13,9 +13,12 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 import pickle
 
-test_video_number = 13
-model_number = 14
-best_threshold = -3.850000000000131
+test_video_number = 15
+
+
+lines = [line.rstrip('\n') for line in open('gmm-pram.txt')]
+model_number = int(lines[0])
+best_threshold = float(lines[1])
 
 gmm_model = pickle.load(open('gmm_model{}.pickle'.format(model_number), 'rb'))
 path = 'files/video-{}_processed.txt'.format(test_video_number)
@@ -25,6 +28,8 @@ y_test = np.reshape(data[:,2],(len(data),1))
 log_likelihood = -gmm_model.score(X_test)
 #print(log_likelihood)
 print('SUMMARY EVALUATION:')
+print('Test Video: {}'.format(test_video_number))
+print(log_likelihood)
 print('log_likelihood min: %.3f \nlog_likelihood.max: %.3f \nlog_likelihood mean: %.3f'
     % (log_likelihood.min(), log_likelihood.max(),log_likelihood.mean()))
 
